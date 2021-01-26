@@ -1,0 +1,41 @@
+- name: Install prerequisites
+  apt: name=aptitude update_cache=yes state=latest force_apt_get=yes
+
+- name: Install mariadb-server and extras
+  apt:
+    name: 
+      - mariadb-server
+      - python3-pymysql
+    state: present
+
+
+- name: Start MariaDB Service
+  service: name=mysql state=started enabled=yes
+
+- name: Create wordpress user
+  mysql_user:
+    name: "{{ mysql_user }}"
+    host: "%"
+    password: "{{ mysql_password }}"
+    priv: "{{ mysql_db }}.*:ALL"
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+
+- name: Create wordpress DB
+  mysql_db:
+    login_user: "{{ mysql_user }}"
+    login_password: "{{ mysql_password }}"
+    name: "{{ mysql_db }}"
+    state: present
+
+- name: ensure mysql is configured to bind to the specified address and port
+  ini_file:
+    dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+    section: mysqld
+    option: "bind-address"
+    value: "{{ item}}"
+  with_items: "{{ db_hostname }}"
+
+- name: restart mysql
+  service: name=mysql state=restarted

@@ -1,0 +1,50 @@
+- hosts: all
+  become: true
+  become_method: sudo
+  vars:
+    mysql_db: "wordpress"
+    mysql_user: "wpuser"
+    mysql_password: "password123"
+    mysql_root_password: "Securepass"
+    db_hostname: "104.131.54.155"
+  tasks:
+  - name: Update packages *
+    apt: name=* state=present
+
+  - name: Install apache2
+    include_tasks: install_apache.yml
+    when: inventory_hostname == "web2" and ansible_facts.distribution == "Debian"
+
+  - name: Install mysql
+    include_tasks: install_mysql.yml
+    when: inventory_hostname == "db2"
+
+  - name: Install php
+    include_tasks: install_php.yml
+    when: inventory_hostname == "web2"
+
+  - name: Install WordPress
+    include_tasks: install_wordpress.yml
+    when: inventory_hostname == "web2"
+
+  - name: Configure wp-config file
+    include_tasks: config_wp.yml
+    when: inventory_hostname == "web2"
+
+  handlers:
+  - name: Reload Apache
+    service:
+      name: apache2
+      state: reloaded
+  - name: restart apache2
+    service: name=apache2 state=restarted
+  - name: reboot
+    reboot:
+      reboot_timeout: 3600
+
+
+
+# when: inventory_hostname == "Redhatweb" and "{{ ansible_facts.distribution }}" == "RedHat"
+# when: inventory_hostname == "Redhatdb" and "{{ ansible_facts.distribution }}"== "RedHat"
+# when: inventory_hostname == "Debianweb" and "{{ ansible_facts.distribution }}" == "Debian"
+# when: inventory_hostname == "Debiandb" and "{{ ansible_facts.distribution }}"== "Debian"

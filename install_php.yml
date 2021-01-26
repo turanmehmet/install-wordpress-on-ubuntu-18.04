@@ -1,0 +1,13 @@
+- name: Install php
+  apt: name={{ item }} update_cache=yes state=present
+  with_items:
+        - php
+        - php-mysql
+        - libapache2-mod-php
+  notify:
+    - restart apache2
+    - Reload Apache
+        
+
+
+      

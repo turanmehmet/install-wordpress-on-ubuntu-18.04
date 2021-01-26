@@ -1,0 +1,38 @@
+- name: Donwload Wordpress
+  unarchive:
+    src: "https://wordpress.org/latest.tar.gz"
+    dest: /tmp
+    remote_src: yes
+- name: Move files to /var/www/html
+  command: cp -rf . "/var/www/html"
+  args:
+    chdir: "/tmp/wordpress/"
+- name: Remove temporary dir
+  file:
+    path: "/tmp/wordpress/"
+    state: absent
+- name: Remove index.html file
+  file:
+    path: "/var/www/html/index.html"
+    state: absent
+
+
+- name: "UFW - Allow HTTP on port {{ http_port }}"
+  ufw:
+    rule: allow
+    port: "80"
+    proto: tcp
+
+- name: Set ownership
+  file:
+    path: "/var/www/"
+    state: directory
+    recurse: yes
+    owner: www-data
+    group: www-data
+
+- name: Set permissions for directories
+  command: "/usr/bin/find /var/www/html/ -type d -exec chmod 750 {} \\;"
+
+- name: Set permissions for files
+  command: "/usr/bin/find /var/www/html/ -type f -exec chmod 640 {} \\;"
